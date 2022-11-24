@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>Firebase_version9_RealtimeDB(G'sACADEMY初学者用サンプル)</title>
+<!-- <style>
+    #output{
+        height: 500px;
+        overflow: scroll;
+        border: 2px solid gray;
+        border-radius: 10px;
+    }
+   
+    .msg:nth-child(even){
+        background: pink;
+        width: 40%;
+        border-radius: 10px;
+        padding: 10px;
+    }
+    .msg:nth-child(odd){
+        width: 40%;
+        background:gainsboro;
+        margin-left: auto;
+        border-radius: 10px;
+        padding: 10px;
+    }
+    .color{
+        background: yellow;
+    }
+</style> -->
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/reset.css">
+</head>
+<body>
+
+<!-- コンテンツ表示画面 -->
+
+<!-- <div>
+    <div> 名前：<input type="text" id="uname"> </div>
+    <div>
+        <textarea id="text" cols="30" rows="10"></textarea>
+        <button id="send">送信</button>
+    </div>
+    <div id="output">
+    </div>
+    </div>
+</div> -->
+<div id="room">
+
+    <div class="box-left">
+        <p class="message-box red" >怒ってる</p>
+    </div>
+
+    <div class="box-right">
+        <p class="message-box green" >嬉しい</p>
+    </div>
+
+    <div class="box-left">
+        <p class="message-box yellow">疲れた</p>
+    </div>
+    
+    <div class="box-right">
+        <p class="message-box blue">悲しい</p>
+    </div>
+
+    <div class="box-left">
+        <p class="message-box pink">楽しい</p>
+    </div>
+
+
+
+</div>
+    
+<br />
+<input type="radio" name="emotion" class="emotion" id="sad" value="sad" />悲しい<br />
+<input type="radio" name="emotion" class="emotion" id="happy" value="happy" />嬉しい<br />
+<input type="radio" name="emotion" class="emotion" id="tired" value="tired" />疲れた<br />
+<input type="radio" name="emotion" class="emotion" id="good" value="good" />楽しい<br />
+<input type="radio" name="emotion" class="emotion" id="anger" value="anger" />怒ってる<br />
+<br />
+
+<div class="input-group chat-input">
+    <input id="inputMessage" type="text" class="form-control" placeholder="メッセージを入力してください">
+    <div class="input-group-append">
+        <button id="sendBtn" class="btn btn-primary" type="button">送信</button>
+    </div>
+    <div id="output"></div>
+</div>
+
+<!--/ コンテンツ表示画面 -->
+
+
+
+<!-- JQuery -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<!-- JQuery -->
+
+
+<!--** 以下Firebase **-->
+<script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js";
+    import { getDatabase, ref, push, set, onChildAdded, remove, onChildRemoved } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-database.js";
+    // TODO: Add SDKs for Firebase products that you want to use
+    // https://firebase.google.com/docs/web/setup#available-libraries
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyALxYlR2pqrx8VsD_qEriweCT4hvkenEuk",
+        authDomain: "dev245-57f6c.firebaseapp.com",
+        projectId: "dev245-57f6c",
+        storageBucket: "dev245-57f6c.appspot.com",
+        messagingSenderId: "82160845381",
+        appId: "1:82160845381:web:c5c7b14a4f1c396073992c"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+
+    const db=getDatabase(app)
+    const dbRef=ref(db,'dev245');
+
+    // 送信処理を記述
+    // $('#send').on('click',function(){
+    //     // id＝”uname"の場所を取得
+    //     const uname=$('#uname').val();
+    //     console.log(uname,'aaa')
+
+    //     // id="text"の場所を取得
+    //     const text=$('#text').val();
+    //     console.log(text,'ssss')
+
+    //     // alert(uname+text);
+
+    //     const msg = {
+    //         uname: uname,
+    //         text: text,
+    //     }
+
+        // firebaseに送る準備をしていることになります🤗
+        // const newPostRef = push(dbRef) //データを送信できる準備
+        // set(newPostRef, msg); // firebaseの登録できる場所に保存するイメージです🤗
+        // $('#uname').val("");
+        // $('#text').val("");
+        // $('#uname').focus();
+
+        // send送信イベント この下を消さない
+    // });
+    // 受信処理を記述
+        // onChildAdded(dbRef, function (data) {
+            // ここからが受信処理が始まります
+
+            // 登録されたデータを取得します🤗
+            // const msg = data.val();
+            // console.log(msg, '取得したデータの塊')
+            // const key = data.key;
+            // console.log(key, 'データの塊にアクセス')
+    // es6のテンプレートリテラル
+    // let h = `
+    //             <div class="msg">
+    //                 <p class="color">${msg.uname}</p>
+    //                 <p>${msg.text}</p>
+    //             </div>    
+    //         `;
+            // htmlに埋め込みましょう🤗
+            // append();というjqueryのおまじないを使います
+//             $("#output").append(h);
+//             })
+    // *3:送信者が自分かどうか保存する変数
+    let isMySelf = true;
+
+    // 送信ボタンがクリックされた時の処理
+    $("#sendBtn").on("click", function () {
+
+        // ****firebase********************
+
+        // 入力値の取得
+        let messageText = inputMessage.value;
+        console.log(messageText);
+        
+
+        // 入力値が空かチェックする
+        if (messageText == '') {
+            // 入力値が空の場合、処理を中断する
+            return;
+        }
+
+        // メッセージ用のdivを作成する（関数）
+        let messageBox = createMessageBox();
+
+        // メッセージ用のdivを作成する（関数）
+        let message = createMessage(messageText);
+
+        // メッセージ用のdivを作成する（関数）221120_1618_時間追加
+        let time = createTimeStamp();
+
+        if (isMySelf) {
+            // *3:自分が送信者の場合
+            messageBox.appendChild(time);
+            messageBox.appendChild(message);
+        } else {
+            // *3:相手が送信者の場合
+            messageBox.appendChild(message);
+            messageBox.appendChild(time);
+        }
+
+        // チャット画面である、divタグを取得する
+        let room = document.getElementById('room');
+
+        // チャット画面のdivに新規メッセージのdivを追加する
+        room.appendChild(messageBox);
+
+        // 221120_1927 格好悪いが、已む無くtimeRecordを再掲示（どうやったらfunctionの途中経過を持ってこれるのか？）
+        //曜日配列
+        let eMonth = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        let week = ["日", "月", "火", "水", "木", "金", "土"];
+
+        //日時取得
+        let now = new Date();            //日付取得準備（必須）！！
+        let year = now.getFullYear();    //年
+        let month = now.getMonth() + 1;  //月+１を足す
+        let date = now.getDate();        //日
+        let day = now.getDay();          //曜日（数値）
+        let h = now.getHours();          //時
+        let m = now.getMinutes();        //分
+        let s = now.getSeconds();        //秒
+
+        //日時表示文字列の作成
+        let timeRecord = year + "-" + month + "-" + date + "(" + week[day] + ") " + h + ":" + m + ":" + s;
+
+        //firebase用＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊
+        const msg = {
+            which: isMySelf, //221120_1832_firebaseに出力できず
+            text: $("#inputMessage").val(),
+            time: timeRecord //221120_1832_firebaseに出力できず
+
+        }
+        const newPostRef = push(dbRef); //ユニークキーを付けたい
+        set(newPostRef, msg);
+
+        //firebase用＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊
+
+        // 入力欄の入力値をリセットする
+        inputMessage.value = '';
+
+        isMySelf = !isMySelf;
+
+        
+        // const txt = $("#inputMessage").val();
+        // console.log(txt);
+    })
+
+    // 【１】関数１つ目：divを作成する
+    function createMessageBox() {
+        // divを作成
+        let messageBox = document.createElement('div');
+        // console.log(messageBox);
+
+        // *3:誰が送信者なのかチェック
+        if (isMySelf) {
+            // *3:自分が送信者の場合
+            // [box-right」というクラスをdivに追加
+            messageBox.classList.add('box-right');
+        } else {
+            // *3:相手が送信者の場合
+            // [box-left」というクラスをdivに追加
+            messageBox.classList.add('box-left');
+        }
+        return messageBox
+    }
+
+    // 【２】メッセージ用のpを作成する
+    function createMessage(messageText) {
+        // pタグを作成
+        let message = document.createElement('p');
+
+        // pタグのテキストに、画面の入力値を設定
+        message.textContent = messageText;
+
+        // pタグに「message-box]というクラスを追加
+        message.classList.add('message-box');
+        // message-boxに感情を色で表す
+        let sa = document.getElementById("sad");
+        let ha = document.getElementById("happy");
+        let ti = document.getElementById("tired");
+        let go = document.getElementById("good");
+        let an = document.getElementById("anger");
+
+        if(sa){
+            message.classList.add('blue');
+        }
+        if(ha){
+            message.classList.add('pink');
+        }
+        if(ti){
+            message.classList.add('yellow');
+        }
+        if(go){
+            message.classList.add('green');
+        }
+        if(an){
+            message.classList.add('red');
+        }
+        // let globalEmotion;
+        // const emotions = document.getElementsByClassName("emotion");
+        // for (let i = 0; i < emotions.length; i++) {
+        //     if (emotions[i].checked == true) {
+        //         console.log(i + 1 + "番目がtrueでした");
+        //         // globalEmotion = `<p>${emotions[i].value}</p>`;
+        //         globalEmotion = emotions[i].value;
+        //     }
+
+        //     console.log(globalEmotion);
+        //     const v = `
+        //         <h1 class="${globalEmotion}">${messageText}</h1>
+        //         `;
+        //     $("#output").append(v);
+        //     // console.log(emotions[i].checked);
+        // }
+        
+
+        // if (isMySelf) {
+        //     // 自分が送信者の場合
+        //     // [green]というクラスをpに追加
+        //     message.classList.add('green');
+        // } else {
+        //     // あいてが送信者の場合
+        //     // [white]というクラスをpに追加
+        //     message.classList.add('white');
+        // }
+        return message;
+    }
+
+    // 【３】メッセージ用のpを作成する
+    function createTimeStamp() {
+        //曜日配列
+        let eMonth = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        let week = ["日", "月", "火", "水", "木", "金", "土"];
+
+        //日時取得
+        let now = new Date();            //日付取得準備（必須）！！
+        let year = now.getFullYear();    //年
+        let month = now.getMonth() + 1;  //月+１を足す
+        let date = now.getDate();        //日
+        let day = now.getDay();          //曜日（数値）
+        let h = now.getHours();          //時
+        let m = now.getMinutes();        //分
+        let s = now.getSeconds();        //秒
+
+        //日時表示文字列の作成
+        let timeRecord = year + "-" + month + "-" + date + "(" + week[day] + ") " + h + ":" + m + ":" + s;
+        console.log(timeRecord);
+        let timeStamp = document.createElement('p');
+        timeStamp.textContent = timeRecord;
+
+        // *3:誰が送信者なのかチェック
+        if (isMySelf) {
+            // *3:自分が送信者の場合
+            // [box-right」というクラスをdivに追加
+            timeStamp.classList.add('box-right-time');
+        } else {
+            // *3:相手が送信者の場合
+            // [box-left」というクラスをdivに追加
+            timeStamp.classList.add('box-left-time');
+        }
+        // timeStamp.classList.add('time');
+        console.log(timeStamp);
+
+        return timeStamp;
+
+    }
+// </script>
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
